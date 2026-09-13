@@ -1,32 +1,31 @@
 const posts = [
   {
-    title: "행안부 게시판 모니터링 만들기",
-    tag: "Automation",
+    title: "지도에서 개발로 이어지는 기록",
+    tag: "Intro",
     date: "2026.09",
     summary:
-      "Python으로 공공기관 게시판을 확인하고 새 글을 감지하는 작은 자동화 프로젝트.",
+      "지리학을 공부하고 차량 인포테인먼트 지도 업무를 하며 느낀 개발 공부의 필요성을 적어갑니다.",
   },
   {
-    title: "블로그 개발 환경 만들기",
-    tag: "Web",
+    title: "업무를 더 잘 이해하기 위한 IT 공부",
+    tag: "Study",
     date: "2026.09",
     summary:
-      "GitHub Pages로 운영할 개인 블로그 레포를 만들고 로컬 개발 흐름을 정리한다.",
+      "소프트웨어, 데이터, 자동화 지식을 차근차근 익히고 실제로 만들어보는 과정을 남깁니다.",
   },
   {
-    title: "데이터 수집 공부 로드맵",
+    title: "데이터 수집과 분석으로 넓히기",
     tag: "Data",
     date: "Soon",
     summary:
-      "requests, BeautifulSoup, pandas를 거쳐 분석 노트북까지 이어지는 학습 기록.",
+      "공공데이터, 웹 데이터, 지도 데이터를 수집하고 분석하는 작은 실험들을 정리할 예정입니다.",
   },
 ];
 
-const projects = [
-  "mois-board-monitor",
-  "blog",
-  "data-analysis",
-  "scraping-labs",
+const profile = [
+  ["Education", "경희대학교 지리학과 졸업"],
+  ["Experience", "현대오토에버 인포테인먼트SW사업부 재직"],
+  ["Focus", "지도 개발, 내비게이션, 데이터, SW/IT 학습"],
 ];
 
 export default function Home() {
@@ -34,34 +33,53 @@ export default function Home() {
     <main>
       <section className="hero">
         <div className="hero__content">
-          <p className="eyebrow">Goodwlsdn.github.io</p>
-          <h1>만들면서 배우는 개발 기록</h1>
+          <p className="eyebrow">Goodwlsdn</p>
+          <h1>지도와 데이터를 공부하는 SW 실무자</h1>
           <p className="hero__lead">
-            블로그, 자동화, 데이터 수집, 분석 프로젝트를 하나씩 만들고 남기는
-            개인 개발 노트입니다.
+            안녕하세요. 지리학을 전공하며 지도에 대한 막연한 관심으로
+            시작해, 지금은 현대자동차 내비게이션에 탑재되는 지도를 개발하는
+            업무를 하고 있습니다. SW/데이터 비전공자로서 개발 및 IT 지식이
+            많이 부족하다고 느껴, 공부하고 만들어보는 과정을 꾸준히 기록하고자
+            합니다.
           </p>
-          <div className="hero__actions" aria-label="Primary sections">
-            <a href="#posts">글 보기</a>
-            <a href="#projects">프로젝트</a>
-          </div>
         </div>
-        <div className="hero__panel" aria-label="Current workspace snapshot">
+        <div className="hero__panel" aria-label="Profile summary">
           <div className="panel__topline">
-            <span>workspace</span>
-            <strong>4 repos planned</strong>
+            <span>Profile</span>
           </div>
-          <div className="terminal-card">
-            <p>$ git clone Goodwlsdn/mois-board-monitor</p>
-            <p>$ mkdir Goodwlsdn.github.io</p>
-            <p>$ pnpm dev</p>
+          <div className="profile-head">
+            <div className="avatar" aria-hidden="true">G</div>
+            <div>
+              <h2>Goodwlsdn</h2>
+              <p>Navigation Map Developer</p>
+            </div>
           </div>
+          <dl className="profile-list">
+            {profile.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
+      </section>
+
+      <section className="section section--intro" id="profile">
+        <p className="eyebrow">About</p>
+        <h2>왜 기록하나요</h2>
+        <p>
+          지리학에서 출발해 지도와 위치 정보를 다루는 일을 하고 있지만,
+          서비스를 더 깊이 이해하고 직접 만들기 위해서는 개발 기반이 필요하다고
+          느꼈습니다. 이곳에는 공부한 개념, 막혔던 부분, 직접 만든 작은 도구와
+          데이터 분석 과정을 꾸준히 남깁니다.
+        </p>
       </section>
 
       <section className="section" id="posts">
         <div className="section__header">
-          <p className="eyebrow">Latest Notes</p>
-          <h2>최근 기록</h2>
+          <p className="eyebrow">Study Notes</p>
+          <h2>앞으로 쌓아갈 기록</h2>
         </div>
         <div className="post-grid">
           {posts.map((post) => (
@@ -77,23 +95,23 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section section--split" id="projects">
+      <section className="section section--split">
         <div>
-          <p className="eyebrow">Build Log</p>
-          <h2>앞으로 만들 저장소들</h2>
+          <p className="eyebrow">Next</p>
+          <h2>만들면서 배우기</h2>
           <p>
-            각 프로젝트는 독립된 레포로 관리하고, 블로그에는 만든 과정과
-            배운 점을 짧게 정리하는 방식으로 쌓아갑니다.
+            블로그를 시작점으로 삼아 데이터 수집, 분석, 자동화, 웹 개발을
+            하나씩 실습합니다. 완성된 결과보다 과정을 남기는 데 초점을 둡니다.
           </p>
         </div>
-        <ul className="repo-list">
-          {projects.map((project) => (
-            <li key={project}>
-              <span>{project}</span>
-              <small>repo</small>
-            </li>
-          ))}
-        </ul>
+        <div className="focus-box">
+          <span>01</span>
+          <p>지도와 위치 데이터를 더 잘 이해하기</p>
+          <span>02</span>
+          <p>업무에 필요한 개발/IT 개념 정리하기</p>
+          <span>03</span>
+          <p>데이터 수집과 분석 프로젝트 만들기</p>
+        </div>
       </section>
     </main>
   );
