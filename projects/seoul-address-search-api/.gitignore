@@ -1,0 +1,21 @@
+# Address databases and derived datasets are intentionally excluded.
+*.sqlite
+*.sqlite-*
+*.db
+data/
+raw-data/
+*.csv
+*.tsv
+*.zip
+
+# Local runtime files
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+public-url.txt
+bin/
+.DS_Store
+.env
+.env.*
+!.env.example

@@ -8,6 +8,10 @@
 - Python 자동화, 데이터 수집, 데이터 분석 기록
 - GitHub Pages 또는 별도 호스팅으로 공개 가능한 블로그
 
+## 프로젝트
+
+- [주소 검색 · 지오코딩 API](projects/seoul-address-search-api/README.md) — FastAPI, SQLite FTS, GeoJSON 기반 주소 검색 API
+
 ## Prerequisites
 
 - Node.js `>=22.13.0`

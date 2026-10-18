@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoCoding API 개발 맵</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>*{box-sizing:border-box}body{margin:0;font:16px system-ui;color:#18304b;background:#f4f7fb}header{padding:20px 24px;background:white;border-bottom:1px solid #ddd}h1{margin:0 0 12px;font-size:24px}form{display:flex;gap:8px}input{flex:1;min-width:0}input,button{font:inherit;padding:12px;border:1px solid #bbc9d9;border-radius:8px}button{background:#165fd2;color:white;cursor:pointer}.examples{margin-top:12px;display:flex;gap:16px;flex-wrap:wrap}a{color:#165fd2}#status{margin:12px 0 0}main{display:grid;grid-template-columns:1fr;height:calc(100dvh - 190px);min-height:420px}main.has-results{grid-template-columns:1fr 320px}main:not(.has-results) aside{display:none}#map{height:100%;background:#e8edf3}aside{overflow:auto;padding:16px;background:white}.item{display:block;text-align:left;background:#f1f5fb;color:#18304b;width:100%;margin:0 0 10px;border:1px solid #d6e1ef}.item strong,.item small{display:block}small{margin-top:6px;color:#536780}@media(max-width:720px){main.has-results{grid-template-columns:1fr}main{grid-template-columns:1fr;height:auto}#map{height:60dvh}aside{max-height:30dvh}header{padding:16px}h1{font-size:21px}}</style><style>body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}header{padding:12px 16px;flex:none}main,main.has-results{display:block;flex:1;min-height:0;height:auto}#map{height:100%;width:100%}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px!important;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}#status[data-error]{position:fixed;top:118px;left:16px;right:16px;z-index:1100;width:auto;height:auto;clip:auto;white-space:normal;margin:0!important;padding:10px 14px;background:white;border:1px solid #bbc9d9;border-radius:8px}@media(max-width:720px){header{padding:10px}#map{height:100%}}</style><style>.center-label{max-width:340px;min-width:180px;white-space:normal;text-align:center;line-height:1.65;overflow-wrap:anywhere}.center-label strong{display:block;margin-bottom:4px}.center-label div{font-size:11px;color:#536780}</style></head>
+<body><header><h1>GeoCoding API 개발 맵</h1><form id="form"><input id="q" aria-label="주소 검색" value="" placeholder="주소 검색"><button id="submit">검색</button></form><p id="status" role="status" class="sr-only"></p></header><main><div id="map" aria-label="GeoCoding API 개발 맵"></div></main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
+const statusEl=document.getElementById('status'),results=document.createElement('div'),qInput=document.getElementById('q');
+const labels={province:'시',district:'구',dong:'법정동',road:'도로',building:'건물',complex:'단지',parcel:'필지'};
+if(typeof L==='undefined'){statusEl.textContent='지도 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요.'}else{
+const map=L.map('map').setView([37.5665,126.978],11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+let current=null,requestId=0;const searchPins=L.layerGroup().addTo(map);
+const menu=document.createElement('div');menu.setAttribute('role','menu');
+Object.assign(menu.style,{position:'fixed',display:'none',zIndex:10000,background:'white',padding:'6px',borderRadius:'10px',boxShadow:'0 4px 24px #0003',width:'190px'});
+document.body.append(menu);
+let clicked=null;
+function closeMenu(){menu.style.display='none'}
+function action(label,handler){const b=document.createElement('button');b.textContent=label;b.setAttribute('role','menuitem');Object.assign(b.style,{display:'block',width:'100%',textAlign:'left',background:'white',color:'#18304b',border:'none'});b.onclick=()=>{closeMenu();handler()};menu.append(b)}
+action('여기 주소 보기',async()=>{const id=++requestId;const location=clicked;
+searchPins.clearLayers();if(current){map.removeLayer(current);current=null}results.replaceChildren();document.querySelector('main').classList.remove('has-results');map.invalidateSize();
+const content=document.createElement('div');content.textContent='주소를 찾고 있습니다…';const popup=L.popup({maxHeight:300}).setLatLng(location).setContent(content).openOn(map);try{
+const response=await fetch('/reverse?'+new URLSearchParams({longitude:location.lng,latitude:location.lat}));if(!response.ok)throw Error('주소 조회에 실패했습니다.');const data=await response.json();content.replaceChildren();const heading=document.createElement('strong');heading.textContent='여기 주소';content.append(heading);
+if(id!==requestId)return;
+const selected=data.results.find(p=>p.id===data.polygon_feature_id);
+if(selected){const geometryResponse=await fetch('/features/'+selected.id);if(!geometryResponse.ok)throw Error('영역을 불러오지 못했습니다.');const polygon=await geometryResponse.json();if(id!==requestId)return;
+current=L.geoJSON(polygon,{style:{color:'#155fda',weight:3,fillColor:'#4285ed',fillOpacity:.25}}).addTo(map);
+map.fitBounds(current.getBounds(),{padding:[35,35],maxZoom:19});statusEl.textContent=labels[selected.kind]+' 영역 표시 · '+(selected.name||selected.address);
+}else{statusEl.textContent='이 위치에 표시할 단지·건물·필지가 없습니다.'}
+function addressLine(label,value){const line=document.createElement('p');const tag=document.createElement('strong');tag.textContent=label+' ';line.append(tag,document.createTextNode(value));content.append(line)}
+if(data.road_address)addressLine('도로명',data.road_address);
+if(data.jibun_addresses?.length)data.jibun_addresses.forEach(value=>addressLine('지번',value));
+if(!data.road_address&&!data.jibun_address){const message=document.createElement('p');message.textContent='이 위치의 도로명·지번 주소를 제공된 데이터에서 찾지 못했습니다.';content.append(message)}
+const coords=document.createElement('small');coords.textContent='경도 '+location.lng.toFixed(7)+' / 위도 '+location.lat.toFixed(7);content.append(coords);popup.update();
+}catch(e){content.textContent=e.message;popup.update()}});
+action('좌표 복사',async()=>{const value=clicked.lng.toFixed(7)+', '+clicked.lat.toFixed(7);try{await navigator.clipboard.writeText(value);statusEl.textContent='좌표 복사 완료 · 경도, 위도: '+value}catch(e){statusEl.textContent='복사하지 못했습니다. 좌표를 직접 복사하세요: '+value}});
+map.on('contextmenu',e=>{if(e.originalEvent)e.originalEvent.preventDefault();clicked=e.latlng;menu.style.display='block';const event=e.originalEvent;menu.style.left=Math.min(event.clientX,window.innerWidth-200)+'px';menu.style.top=Math.min(event.clientY,window.innerHeight-115)+'px';menu.querySelector('button').focus()});
+document.addEventListener('click',e=>{if(!menu.contains(e.target))closeMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});map.on('movestart',closeMenu);
+async function search(){const id=++requestId,q=qInput.value.trim();if(!q)return;statusEl.removeAttribute('data-error');statusEl.textContent='검색 중…';document.getElementById('submit').disabled=true;try{
+const response=await fetch('/search?'+new URLSearchParams({q,limit:20}));const data=await response.json();if(id!==requestId)return;if(!response.ok)throw Error(typeof data.detail==='string'?data.detail:'검색에 실패했습니다.');
+searchPins.clearLayers();if(current)map.removeLayer(current);results.replaceChildren();document.querySelector('main').classList.toggle('has-results',data.count>0);map.invalidateSize();
+current=L.geoJSON(data,{style:{color:'#155fda',weight:3,fillColor:'#4285ed',fillOpacity:.25},onEachFeature:(feature,layer)=>{
+const p=feature.properties,popup=document.createElement('div');const title=document.createElement('strong');title.textContent=p.kind==='complex'?p.name+' · '+p.address:p.address||p.name;popup.append(title,document.createElement('br'));const text=document.createElement('span');text.textContent=labels[p.kind]+' · '+p.longitude.toFixed(6)+', '+p.latitude.toFixed(6);popup.append(text);
+const centerLng=p.center_longitude??p.longitude,centerLat=p.center_latitude??p.latitude;
+const pinLabel=document.createElement('div');const pinTitle=document.createElement('strong');pinTitle.textContent=p.kind==='complex'?p.name+' · '+p.address:p.address||p.name;const pinCoords=document.createElement('div');const lngLine=document.createElement('div');lngLine.textContent='경도 '+centerLng.toFixed(7);const latLine=document.createElement('div');latLine.textContent='위도 '+centerLat.toFixed(7);pinCoords.append(lngLine,latLine);pinLabel.append(pinTitle,pinCoords);
+L.marker([centerLat,centerLng]).bindTooltip(pinLabel,{permanent:true,direction:'top',offset:[0,-36],className:'center-label'}).addTo(searchPins);
+const item=document.createElement('button');item.className='item';const heading=document.createElement('strong');heading.textContent=p.kind==='complex'?p.name:p.address||p.name;const sub=document.createElement('small');sub.textContent=(p.kind==='complex'?p.address+' · 건물 '+p.attributes.building_count+'개 · ':'')+labels[p.kind]+' · 경도 '+p.longitude.toFixed(6)+' / 위도 '+p.latitude.toFixed(6);item.append(heading,sub);item.onclick=()=>{map.fitBounds(layer.getBounds(),{padding:[30,30],maxZoom:19});};results.append(item);
+}}).addTo(map);
+if(!data.count)statusEl.setAttribute('data-error','');if(data.count)map.fitBounds(current.getBounds(),{padding:[30,30],maxZoom:19});
+statusEl.textContent=data.count?data.count+'개 결과 · 파란 영역이 검색한 폴리곤입니다.'+(data.has_more?' 처음 20개를 표시합니다.':''):'검색 결과가 없습니다.';
+history.replaceState(null,'','?'+new URLSearchParams({q}));
+}catch(e){statusEl.textContent=e.message;statusEl.setAttribute('data-error','')}finally{if(id===requestId)document.getElementById('submit').disabled=false}}
+document.getElementById('form').onsubmit=e=>{e.preventDefault();search()};qInput.value=new URLSearchParams(location.search).get('q')||'';if(qInput.value)search();else statusEl.textContent='주소를 검색하거나 지도를 우클릭하세요.';
+}
+</script></body></html>
+
+
